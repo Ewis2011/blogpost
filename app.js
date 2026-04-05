@@ -15,6 +15,11 @@ const app = express();
 app.use(express.json());
 app.use("/api/blogs", blogRoute);
 
+app.use((err, req, res, next) => {
+    console.log("An error!", err);
+    res.status(500).json({error: err.message || "Internal Server Error"});
+});
+
 const PORT = 3003;
 app.listen(PORT, ()=>{
     console.log("Server is running...");
