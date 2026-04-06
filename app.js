@@ -1,26 +1,26 @@
 import express from "express"
 import mongoose from "mongoose";
 import blogRoute from "./Controllers/blogRoute.js"
+import usersRoute from "./Controllers/usersRoute.js"
+import dotenv from "dotenv";
+dotenv.config();
 
-if(process.argv.length < 3){
-    console.log("Password must be an arg in cmd")
-    process.exit();
-}
-const passwd = process.argv[2];
-
-const mongouri = `mongodb+srv://aewis20:${passwd}@persons.vwdnoit.mongodb.net/blog?appName=Cluster0`;
-mongoose.connect(mongouri, {family: 4});
+const mongouri = process.env.MONGO_URI;
+mongoose.connect(mongouri, {family: 4})
+.then(()=> console.log("Connected"))
+.catch(e => console.log("Connection Failed", e));
 
 const app = express();
 app.use(express.json());
 app.use("/api/blogs", blogRoute);
+app.use("/api/users", usersRoute);
 
 app.use((err, req, res, next) => {
     console.log("An error!", err);
     res.status(500).json({error: err.message || "Internal Server Error"});
 });
 
-const PORT = 3003;
+const PORT = process.env.PORT;
 app.listen(PORT, ()=>{
     console.log("Server is running...");
 });
