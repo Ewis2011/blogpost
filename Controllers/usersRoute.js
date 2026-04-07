@@ -28,27 +28,10 @@ usersRoute.post("/", (req, res, next) => {
 
 usersRoute.get("/", (req, res, next) => {
     User.find({})
-        .then(users => {
-            return Promise.all(users.map(user => {
-                const u = user.toObject();
-                delete u.password;
-                delete u.__v;
-                u.id = u._id.toString();
-                delete u._id;
-                return Blog.find({ "creation.username": user.username })
-                    .then(blogs => {
-                        u.blogs = blogs.map(blog => {
-                            const b = blog.toObject();
-                            delete b.__v;
-                            b.id = b._id.toString();
-                            delete b._id;
-                            return b;
-                        });
-                        return u;
-                    });
-            }));
+        .populate("blogs", { title: 1, url: 1, likes: 1 }) 
+        .then(user => {
+            res.json(user);
         })
-        .then(userObjWithBlogs => res.json(userObjWithBlogs))
-        .catch(e => next(e));
+        .catch(err => next(err));
 });
 export default usersRoute;
