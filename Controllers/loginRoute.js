@@ -1,6 +1,9 @@
 import { Router } from "express";
+import User from "../Models/userSchema.js";
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
 
-loginRoute = new Router();
+const loginRoute = new Router();
 
 loginRoute.post("/", (req, res, next) => {
     const { username, password } = req.body;

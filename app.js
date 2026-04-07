@@ -4,7 +4,6 @@ import blogRoute from "./Controllers/blogRoute.js"
 import usersRoute from "./Controllers/usersRoute.js"
 import loginRoute from "./Controllers/loginRoute.js"
 import dotenv from "dotenv";
-import loginRoute from "./Controllers/loginRoute.js";
 dotenv.config();
 
 const mongouri = process.env.MONGO_URI;

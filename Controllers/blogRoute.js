@@ -8,7 +8,7 @@ dotenv.config();
 const getTokenFrom = (req, res, next) => {
     const authorization = req.headers.authorization;
     if(authorization && authorization.startsWith("Bearer")){
-        return authorization.replace('Bearer','');
+        return authorization.replace('Bearer ','');
     }
     return null;
 };
@@ -64,7 +64,7 @@ blogRoute.post("/",(req, res, next) => {
         }
 
     let user;
-    User.findOne({})
+    User.findOne({_id:decodeToken.id})
     .then(creator => {
         if(!creator){
             return res.status(400).json({error:"not found"});
