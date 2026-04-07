@@ -4,16 +4,45 @@ import User from "../Models/userSchema.js";
 const blogRoute = Router();
 
 blogRoute.get("/",(req, res, next) => {
-    const {search} = req.query;
-    const finder = search ? {title: search} : {};
+    let {page, limit} = req.query;
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 3;
+    
+    const {search, author, sortBy, order} = req.query;
+    const filter = {};
+    const allowedSortFields = ["likes", "title", "author"];
+    const sortField = allowedSortFields.includes(sortBy) ? sortBy : "likes";
+    const sortOrder = order === "asc" ? 1 : -1;
+    if (search) {
+        filter.title = {$regex: search, $options:"i"};
+    }
+    if (author) {
+        filter.author = {$regex: author, $options:"i"};
+    }
+    if (sortBy && !allowedSortFields.includes(sortBy)){
+        const error = new Error("Invalid sort field");
+        return next(error)
+    }
+        Blog.countDocuments(filter)
+        .then(totalCount => {
+            return Blog.find(filter)
+                .sort({ [sortField]: sortOrder })
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .populate("user", { username: 1, name: 1 })
+                .then(blogs => {
+                    res.json({
+                        total: totalCount,
+                        page: page,
+                        limit: limit,
+                        data: blogs
+                    });
+                });
+        })
+        .catch(err => {
+            next(err);
+        });
 
-    Blog.find(finder)
-    .populate("user", {username:1, name:1})
-    .then(blog => {res.json(blog)})
-    .catch(err => {
-        res.status(400).json({error: "no query"})
-        next(err);
-    });
 });
 
 blogRoute.post("/",(req, res, next) => {
