@@ -1,8 +1,6 @@
 import { Router } from "express";
 import User from "../Models/userSchema.js";
 import bcrypt from "bcrypt";
-import dotenv from "dotenv";
-dotenv.config();
 
 const usersRoute = Router();
 

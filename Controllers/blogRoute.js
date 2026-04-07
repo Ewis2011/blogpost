@@ -2,8 +2,6 @@ import { Router } from "express";
 import Blog from "../Models/blogSchema.js"
 import User from "../Models/userSchema.js";
 import jwt from "jsonwebtoken"
-import dotenv from "dotenv";
-dotenv.config();
 
 const getTokenFrom = (req, res, next) => {
     const authorization = req.headers.authorization;
