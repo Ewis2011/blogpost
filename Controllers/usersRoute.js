@@ -1,7 +1,6 @@
 import { Router } from "express";
 import User from "../Models/userSchema.js";
 import bcrypt from "bcrypt";
-import Blog from "../Models/blogSchema.js";
 const usersRoute = Router();
 
 usersRoute.post("/", (req, res, next) => {
