@@ -1,6 +1,18 @@
 import { Router } from "express";
 import Blog from "../Models/blogSchema.js"
 import User from "../Models/userSchema.js";
+import jwt from "jsonwebtoken"
+import dotenv from "dotenv";
+dotenv.config();
+
+const getTokenFrom = (req, res, next) => {
+    const authorization = req.headers.authorization;
+    if(authorization && authorization.startsWith("Bearer")){
+        return authorization.replace('Bearer','');
+    }
+    return null;
+};
+
 const blogRoute = Router();
 
 blogRoute.get("/",(req, res, next) => {
@@ -46,6 +58,11 @@ blogRoute.get("/",(req, res, next) => {
 });
 
 blogRoute.post("/",(req, res, next) => {
+    const decodeToken = jwt.verify(getTokenFrom(req), process.env.SECRET);
+        if(!decodeToken.id){
+            return res.status(401).json({error: "Token invalid"})
+        }
+
     let user;
     User.findOne({})
     .then(creator => {

@@ -2,7 +2,9 @@ import express from "express"
 import mongoose from "mongoose";
 import blogRoute from "./Controllers/blogRoute.js"
 import usersRoute from "./Controllers/usersRoute.js"
+import loginRoute from "./Controllers/loginRoute.js"
 import dotenv from "dotenv";
+import loginRoute from "./Controllers/loginRoute.js";
 dotenv.config();
 
 const mongouri = process.env.MONGO_URI;
@@ -14,6 +16,7 @@ const app = express();
 app.use(express.json());
 app.use("/api/blogs", blogRoute);
 app.use("/api/users", usersRoute);
+app.use("/api/login", loginRoute);
 
 app.use((err, req, res, next) => {
     console.log("An error!", err);

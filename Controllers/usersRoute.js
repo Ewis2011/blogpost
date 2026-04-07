@@ -1,6 +1,10 @@
 import { Router } from "express";
 import User from "../Models/userSchema.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken"
+import dotenv from "dotenv";
+dotenv.config();
+
 const usersRoute = Router();
 
 usersRoute.post("/", (req, res, next) => {
@@ -17,10 +21,9 @@ usersRoute.post("/", (req, res, next) => {
         const newUser = new User({ username, password:hashed, name });
         return newUser.save();
     })
-    .then(user => {
-        const userObj = user.toObject();
-        delete userObj.password;    
-        res.status(201).json(userObj);
+    .then(savedUser => {
+        const userObj = savedUser.toObject();
+        res.status(201).send(userObj);
     })
     .catch(e => next(e));
 });
