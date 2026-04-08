@@ -6,12 +6,12 @@ import jwt from "jsonwebtoken"
 const loginRoute = new Router();
 
 loginRoute.post("/", (req, res, next) => {
-    const { username, password } = req.body;
+    const { username, password} = req.body;
 
     User.findOne({ username })
         .then(user => {
             if (!user) {
-                return res.status(401).json({ message: "invalid username or password" });
+                return res.status(401).json({ message: "invalid username" });
             }
             return bcrypt.compare(password, user.password).then(passwordCorrect => {
                 if (!passwordCorrect) {
@@ -19,6 +19,7 @@ loginRoute.post("/", (req, res, next) => {
                 }
                 const userForToken = {
                     username: user.username,
+                    name: user.name,
                     id: user._id
                 };
                 const token = jwt.sign(userForToken, process.env.SECRET, { expiresIn: 60 * 60 });
@@ -30,7 +31,7 @@ loginRoute.post("/", (req, res, next) => {
                 });
             });
         })
-        .catch(err => next(err));
+        .catch(error => next(error));
 });
 
 export default loginRoute;

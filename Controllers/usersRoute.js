@@ -22,7 +22,7 @@ usersRoute.post("/", (req, res, next) => {
         const userObj = savedUser.toObject();
         res.status(201).send(userObj);
     })
-    .catch(e => next(e));
+    .catch(error => next(error));
 });
 
 usersRoute.get("/", (req, res, next) => {
@@ -31,6 +31,6 @@ usersRoute.get("/", (req, res, next) => {
         .then(user => {
             res.json(user);
         })
-        .catch(err => next(err));
+        .catch(error => next(error));
 });
 export default usersRoute;

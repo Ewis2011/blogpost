@@ -2,15 +2,7 @@ import { Router } from "express";
 import Blog from "../Models/blogSchema.js"
 import User from "../Models/userSchema.js";
 import jwt from "jsonwebtoken"
-
-const getTokenFrom = (req, res, next) => {
-    const authorization = req.headers.authorization;
-    if(authorization && authorization.startsWith("Bearer")){
-        return authorization.replace('Bearer ','');
-    }
-    return null;
-};
-
+import {userExtractor} from "../Middlewares/tokenExtractor.js"
 const blogRoute = Router();
 
 blogRoute.get("/",(req, res, next) => {
@@ -49,35 +41,43 @@ blogRoute.get("/",(req, res, next) => {
                     });
                 });
         })
-        .catch(err => {
-            next(err);
+        .catch(error => {
+            next(error);
         });
 
 });
 
-blogRoute.post("/",(req, res, next) => {
-    const decodeToken = jwt.verify(getTokenFrom(req), process.env.SECRET);
-        if(!decodeToken.id){
-            return res.status(401).json({error: "Token invalid"})
-        }
+blogRoute.post("/", userExtractor ,(req, res, next) => {
 
-    let user;
-    User.findOne({_id:decodeToken.id})
-    .then(creator => {
-        if(!creator){
-            return res.status(400).json({error:"not found"});
+    const userId = req.user.id;
+    const creator = req.user;
+    delete creator.iat;
+    delete creator.exp;
+
+    User.findOne({_id:userId})
+    .then(user => {
+        if(!user){
+            return res.status(400).json({error:"user not found"});
         }
-        user = creator;
-        const newBlog = new Blog({...req.body, user: user._id});
+        const newBlog = new Blog(
+            {
+                ...req.body,
+                user: userId
+            }
+        );
         
-        return newBlog.save()
+        return newBlog.save().then(savedBlog => {
+            return {savedBlog, user}
+        });
     })
-    .then(savedBlog => {
+    .then(({savedBlog, user}) => {
         user.blogs = user.blogs.concat(savedBlog._id);
         return user.save().then(() => savedBlog);
     })
-    .then(blog => res.status(201).json(blog))
-    .catch(err => next(err));
+    .then(blog => res.status(201).json({blog, creator: req.user}))
+    .catch(error => {
+        res.status(401).json({error: "Unauthorized user"})
+    });
 });
 
 blogRoute.patch("/:id/like", (req, res, next) => {
@@ -89,16 +89,39 @@ blogRoute.patch("/:id/like", (req, res, next) => {
     )
     .then(updatedBlog => {
         if(!updatedBlog){
-            return res.status(404).json({error: "Blog does not exist"})
+            return res.status(400).json({error: "Blog not found"})
         }
         res.status(200).json(updatedBlog)})
-        .catch(err => {
-            if (err.name === 'CastError') {
-                return res.status(400).json({ error: "malformed id" });
-            }
-            next(err);
+        .catch(error => {
+            next(error);
         });
     });
     
+blogRoute.delete("/:id", userExtractor,(req, res, next)=>{
+    const id = req.params.id;
+    const userOfAction = req.user;
+    delete userOfAction.iat;
+    delete userOfAction.exp;
+    const userId = req.user.id;
 
-    export default blogRoute;
+    if(!userId){
+        res.status(401).json({error: "Invalid Id"});
+    }
+    Blog.findById(id)
+    .then((blog) => {
+        if(!blog){
+           return res.status(400).json({error: "Blog not found"});    
+        }
+        if (blog.user.toString() === userId)
+           return Blog.deleteOne({_id:id}).
+            then(() => {
+                res.status(200).json({message:"Deleted Successfully", user: userOfAction});
+            })
+        else{
+            res.status(403).json({error: "Permission denied!"});
+        }
+    })
+    .catch(error => next(error));
+});
+
+export default blogRoute;
